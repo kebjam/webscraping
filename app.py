@@ -172,7 +172,7 @@ with tab1:
     with col1:
         st.markdown("### Informations clés")
         st.markdown("""
-        - **Analyse en temps réel** des offres d'emploi au Sénégal
+        - **Analyse** des offres d'emploi au Sénégal
         - **Identification des compétences** les plus demandées
         - **Suivi des secteurs** qui recrutent le plus
         - **Filtrage avancé** par lieu, secteur, type de contrat
@@ -544,7 +544,7 @@ st.markdown("""
 <div style='text-align: center; color: #6C757D; padding: 20px;'>
     <p> Données nationales sur les offres d'emploi au Sénégal</p>
     <p>Développé par CAMARA Sanor & Kebjam Jackson - ENSAE</p>
-    <p>© 2024 - Tous droits réservés</p>
+    <p>© 2025 - Tous droits réservés</p>
 </div>
 """, unsafe_allow_html=True)
 
