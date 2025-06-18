@@ -122,7 +122,8 @@ if df.empty:
 df['Categorie_date'] = df['Date_publication'].apply(categorize_date)
 
 # Création des onglets
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏠 Accueil", "👥 À propos", "💼 Offres d'emploi", "📈 Dashboard", "❓ Aide"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏠 Accueil", "👥 À propos", "💼 Offres d'emploi", "📈 Tableau de bord", "❓ Aide"])
+
 
 # ONGLET ACCUEIL
 with tab1:
@@ -284,12 +285,15 @@ with tab3:
     )
 
 # ONGLET DASHBOARD
+
+
+
 with tab4:
     st.markdown("## Dashboard analytique")
     
     # Sidebar pour les filtres
     with st.sidebar:
-        st.markdown("### Filtres")
+        st.markdown("### Filtres pour tableau de bord")
         
         # Filtres multiples
         secteurs_selectionnes = st.multiselect(
@@ -327,7 +331,7 @@ with tab4:
         df_dashboard = df_dashboard[df_dashboard['Type_contrat_regroupe'].isin(types_contrat_selectionnes)]
     if date_categories:
         df_dashboard = df_dashboard[df_dashboard['Categorie_date'].isin(date_categories)]
-    
+
     # Métriques principales
     col1, col2, col3, col4 = st.columns(4)
     
@@ -338,51 +342,63 @@ with tab4:
     with col3:
         st.metric("Villes concernées", df_dashboard['Lieu'].nunique())
     with col4:
-        secteur_top = df_dashboard['secteur'].mode()[0] if not df_dashboard.empty else "N/A"
+        secteur_top = df_dashboard['secteur'].mode()[0] if not df_dashboard.empty else "0"
         st.metric("Secteur leader", secteur_top)
-    
+ 
     # Graphiques principaux
     col1, col2 = st.columns(2)
     
     with col1:
         # Top 10 des secteurs qui recrutent le plus
         secteurs_top = df_dashboard['secteur'].value_counts().head(10)
+
+        # Création d’un DataFrame pour plotly express
+        secteurs_top_df = secteurs_top.reset_index()
+        secteurs_top_df.columns = ['Secteur', 'Nombre_offres']
+
         fig_secteurs = px.bar(
-            x=secteurs_top.values,
-            y=secteurs_top.index,
+            secteurs_top_df,
+            x="Nombre_offres",
+            y="Secteur",
             orientation='h',
             title="Top 10 des secteurs qui recrutent le plus",
-            color=secteurs_top.values,
+            color="Nombre_offres",
             color_continuous_scale="Viridis"
         )
+
         fig_secteurs.update_layout(height=500)
         st.plotly_chart(fig_secteurs, use_container_width=True)
+
     
     with col2:
         # Répartition par type de contrat
-        contrats = df_dashboard['Type_contrat_regroupe'].value_counts()
+        contrats = df_dashboard['Type_contrat_regroupe'].value_counts().reset_index()
+        contrats.columns = ['Type de contrat', 'Nombre']
+
         fig_contrats = px.pie(
-            values=contrats.values,
-            names=contrats.index,
+            contrats,
+            values='Nombre',
+            names='Type de contrat',
             title="Répartition par type de contrat"
         )
         fig_contrats.update_layout(height=500)
         st.plotly_chart(fig_contrats, use_container_width=True)
-    
+
     # Analyse des compétences
     st.markdown("### Compétences les plus demandées")
-    
+
     # Extraction et analyse des compétences
     toutes_competences = []
     for comp_str in df_dashboard['competences'].dropna():
         toutes_competences.extend(extract_competences(comp_str))
-    
+
     if toutes_competences:
+        from collections import Counter
         competences_counter = Counter(toutes_competences)
         top_competences = competences_counter.most_common(20)
-        
+
         comp_df = pd.DataFrame(top_competences, columns=['Compétence', 'Fréquence'])
-        
+
         fig_comp = px.bar(
             comp_df,
             x='Fréquence',
@@ -396,34 +412,45 @@ with tab4:
         st.plotly_chart(fig_comp, use_container_width=True)
     else:
         st.info("Aucune donnée de compétences disponible pour les filtres sélectionnés.")
-    
+
     # Analyse temporelle
     col1, col2 = st.columns(2)
-    
+
     with col1:
         # Distribution par ancienneté
-        dates_dist = df_dashboard['Categorie_date'].value_counts()
+        dates_dist = df_dashboard['Categorie_date'].value_counts().reset_index()
+        dates_dist.columns = ['Ancienneté', 'Nombre']
+
         fig_dates = px.bar(
-            x=dates_dist.index,
-            y=dates_dist.values,
-            title=" Distribution par ancienneté des offres",
-            color=dates_dist.values,
+            dates_dist,
+            x='Ancienneté',
+            y='Nombre',
+            title="Distribution par ancienneté des offres",
+            color='Nombre',
             color_continuous_scale="Oranges"
         )
+        fig_dates.update_layout(height=500)
         st.plotly_chart(fig_dates, use_container_width=True)
+
     
     with col2:
-        # Top villes
-        villes_top = df_dashboard['Lieu'].value_counts().head(10)
+        # Top 10 des villes qui recrutent
+        villes_top = df_dashboard['Lieu'].value_counts().head(10).reset_index()
+        villes_top.columns = ['Ville', 'Nombre_offres']
+
         fig_villes = px.bar(
-            x=villes_top.values,
-            y=villes_top.index,
+            villes_top,
+            x='Nombre_offres',
+            y='Ville',
             orientation='h',
             title="Top 10 des villes qui recrutent",
-            color=villes_top.values,
+            color='Nombre_offres',
             color_continuous_scale="Reds"
         )
+
+        fig_villes.update_layout(height=500)
         st.plotly_chart(fig_villes, use_container_width=True)
+
 
 # ONGLET AIDE
 with tab5:
